@@ -30,6 +30,7 @@ import qualified Text.XML.Light as XML
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as HA
 import Text.Blaze.Html.Renderer.String (renderHtml)
+import Control.Monad.State (forM_)
 --------------------------------------------------------------------------------
 newtype HtmlPath = HtmlPath FilePath
   deriving (Typeable)
@@ -72,7 +73,7 @@ htmlRunner = Tasty.TestReporter optionDescription runner
     return $ \statusMap ->
       let
 
-        runTest _ testName _ = Traversal $ Functor.Compose $ do
+          runTest _ testName _ = Traversal $ Functor.Compose $ do
           i <- State.get
 
           summary <- lift $ STM.atomically $ do
@@ -139,7 +140,8 @@ htmlRunner = Tasty.TestReporter optionDescription runner
               H.p "summaryErrors"
               H.p H.! HA.class_ "summaryErrors" $ H.toHtml $ (show . getSum . summaryErrors $ summary)
               H.p H.! HA.class_ "summaryFailures" $ H.toHtml (show . getSum . summaryFailures $ summary)
-                --, XML.Attr (XML.unqual "tests") (show tests)
+              H.div H.! HA.class_ "tests" $
+                   H.ol $ forM_ tests (H.li . H.toHtml . show)
 
         return (getSum ((summaryFailures `mappend` summaryErrors) summary) == 0)
 
