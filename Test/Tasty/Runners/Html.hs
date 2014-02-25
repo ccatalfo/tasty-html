@@ -29,6 +29,7 @@ import qualified Test.Tasty.Runners as Tasty
 import qualified Text.XML.Light as XML
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as HA
+import Text.Blaze.Html.Renderer.String (renderHtml)
 --------------------------------------------------------------------------------
 newtype HtmlPath = HtmlPath FilePath
   deriving (Typeable)
@@ -130,16 +131,15 @@ htmlRunner = Tasty.TestReporter optionDescription runner
              testTree
 
         writeFile path $
-          XML.showTopElement $
-            appEndo (xmlRenderer summary) $
-              XML.node
-                (XML.unqual "testsuites")
-                [ XML.Attr (XML.unqual "errors")
-                    (show . getSum . summaryErrors $ summary)
-                , XML.Attr (XML.unqual "failures")
-                    (show . getSum . summaryFailures $ summary)
-                , XML.Attr (XML.unqual "tests") (show tests)
-                ]
+         renderHtml $ 
+          H.docTypeHtml $ do
+            H.head $ do
+              H.title "Test Results"
+            H.body $ do
+              H.p "summaryErrors"
+              H.p H.! HA.class_ "summaryErrors" $ H.toHtml $ (show . getSum . summaryErrors $ summary)
+              H.p H.! HA.class_ "summaryFailures" $ H.toHtml (show . getSum . summaryFailures $ summary)
+                --, XML.Attr (XML.unqual "tests") (show tests)
 
         return (getSum ((summaryFailures `mappend` summaryErrors) summary) == 0)
 
