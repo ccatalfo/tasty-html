@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | Run a 'Tasty.TestTree' and produce an HTML file summarising the test results.
 module Test.Tasty.Runners.Html (htmlRunner) where
@@ -26,7 +27,8 @@ import qualified Test.Tasty.Options as Tasty
 import qualified Test.Tasty.Providers as Tasty
 import qualified Test.Tasty.Runners as Tasty
 import qualified Text.XML.Light as XML
-
+import qualified Text.Blaze.Html5 as H
+import qualified Text.Blaze.Html5.Attributes as HA
 --------------------------------------------------------------------------------
 newtype HtmlPath = HtmlPath FilePath
   deriving (Typeable)
@@ -77,7 +79,7 @@ htmlRunner = Tasty.TestReporter optionDescription runner
               fromMaybe (error "Attempted to lookup test by index outside bounds") $
                 IntMap.lookup i statusMap
 
-            let testCaseAttributes = map (uncurry XML.Attr . first XML.unqual)
+            let testCaseAttributes = Prelude.map (uncurry XML.Attr . first XML.unqual)
                   [ ("name", testName ) ]
 
                 mkSummary contents =
